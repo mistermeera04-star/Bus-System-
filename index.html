@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>College Bus Route &amp; Fare Management System</title>
+<style>
+:root{--bg:#f1f5fb;--card:#fff;--tx:#1e293b;--mut:#64748b;--bd:#e2e8f0;--pri:#4f46e5;--pri2:#06b6d4;--dan:#ef4444;--ok:#10b981;--sh:0 8px 24px rgba(79,70,229,.10)}
+body.dark{--bg:#0b1120;--card:#151e33;--tx:#e6ecf8;--mut:#94a3b8;--bd:#26324d;--sh:0 8px 24px rgba(0,0,0,.35)}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx);transition:background .3s,color .3s}
+#side{position:fixed;inset:0 auto 0 0;width:220px;background:linear-gradient(170deg,#4f46e5,#06b6d4);color:#fff;padding:22px 14px;display:flex;flex-direction:column;gap:18px;z-index:5}
+.brand{font-size:1.4rem;font-weight:800;padding:0 8px}
+#nav{display:flex;flex-direction:column;gap:6px}
+#nav button{display:flex;gap:10px;align-items:center;background:transparent;border:0;color:#fff;padding:11px 12px;border-radius:12px;font-size:1rem;cursor:pointer;transition:.2s}
+#nav button:hover{background:rgba(255,255,255,.18);transform:translateX(4px)}
+#nav button.on{background:rgba(255,255,255,.28);font-weight:700}
+.foot{margin-top:auto;opacity:.85;padding:0 8px}
+main{margin-left:220px;padding:22px;max-width:1200px}
+header{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+header h2{margin:0;flex:1 1 auto;font-size:1.6rem}
+input,select{padding:11px 13px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);font-size:1rem;width:100%;margin:5px 0;outline:none}
+input:focus,select:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(79,70,229,.2)}
+header input{width:280px;margin:0}
+button{font:inherit;cursor:pointer}
+.pri,.dan,.ghost,.ico{border:0;border-radius:12px;padding:10px 16px;color:#fff;transition:.2s}
+.pri{background:linear-gradient(135deg,var(--pri),var(--pri2));margin-top:6px}
+.dan{background:var(--dan)}
+.ghost{background:var(--bd);color:var(--tx);padding:6px 10px;font-size:.85rem}
+.ico{background:var(--card);color:var(--tx);border:1px solid var(--bd);font-size:1.2rem}
+.pri:hover,.dan:hover,.ghost:hover,.ico:hover{transform:translateY(-2px);filter:brightness(1.08)}
+.tab{display:none}.tab.on{display:block;animation:fade .45s ease}
+@keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:18px;box-shadow:var(--sh);transition:.25s}
+.card:hover{transform:translateY(-3px)}
+.card h3{margin:0 0 10px}
+.stat p{margin:0;color:var(--mut)}.stat b{font-size:2rem;background:linear-gradient(135deg,var(--pri),var(--pri2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat small{display:block;color:var(--mut)}
+canvas{width:100%;height:280px;display:block}canvas.sq{height:240px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;margin-top:16px}
+.wide{grid-column:1/-1}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bar{display:grid;grid-template-columns:auto 1fr 1fr;gap:10px;align-items:center;margin-bottom:14px}
+.rt{margin-bottom:16px;animation:fade .4s ease}
+.rt-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.rt-h h3{margin:0;flex:1 1 200px}
+.badge{background:rgba(79,70,229,.14);color:var(--pri);border-radius:20px;padding:3px 10px;font-size:.8rem}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:480px}
+th,td{padding:9px 8px;text-align:left;border-bottom:1px solid var(--bd)}
+th{color:var(--mut);font-size:.8rem;text-transform:uppercase}
+tr:hover td{background:rgba(79,70,229,.06)}
+td .ghost{margin:2px}
+.note{color:var(--mut);margin:8px 0 0}
+.stk{padding-left:20px;margin:10px 0 0;max-height:150px;overflow:auto;color:var(--mut)}
+.stk li:first-child{color:var(--tx);font-weight:700}
+.leg{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:.85rem}
+.leg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}
+.insl{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.insl li{padding:10px 12px;border-radius:12px;background:var(--bg)}
+.empty{text-align:center;color:var(--mut);padding:40px}
+dialog{border:0;border-radius:18px;padding:22px;width:min(92vw,420px);background:var(--card);color:var(--tx);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+dialog::backdrop{background:rgba(0,0,0,.5);backdrop-filter:blur(3px)}
+dialog h3{margin-top:0}dialog label{display:block;color:var(--mut);font-size:.9rem;margin-top:8px}
+.row{display:flex;gap:10px;margin-top:14px}.row button{flex:1;padding:11px;border-radius:12px;border:1px solid var(--bd);background:var(--bg);color:var(--tx)}
+.row .pri{color:#fff;border:0;margin:0}
+#toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,30px);background:#111827;color:#fff;padding:12px 20px;border-radius:30px;opacity:0;pointer-events:none;transition:.35s;z-index:20;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:800px){
+ #side{inset:auto 0 0 0;width:auto;flex-direction:row;padding:6px;border-radius:18px 18px 0 0;gap:0}
+ .brand,.foot{display:none}
+ #nav{flex-direction:row;width:100%;justify-content:space-around}
+ #nav button{flex-direction:column;gap:2px;padding:6px 8px;font-size:.7rem}
+ #nav button:hover{transform:none}
+ main{margin:0;padding:14px 12px 100px}
+ header input{width:100%;order:3}
+ .bar{grid-template-columns:1fr 1fr}.bar .pri{grid-column:1/-1}
+ #toast{bottom:84px}
+}
+.code{background:#0b1120;color:#e2e8f0;padding:16px;border-radius:14px;overflow:auto;max-height:70vh;font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre}
+</style>
+</head>
+<body>
+<aside id="side">
+  <div class="brand">🚌 <span>BusFare</span></div>
+  <nav id="nav">
+    <button data-tab="dashboard" class="on"><i>📊</i><span>Dashboard</span></button>
+    <button data-tab="routes"><i>🛣️</i><span>Routes</span></button>
+    <button data-tab="tools"><i>🧰</i><span>Tools</span></button>
+    <button data-tab="analytics"><i>📈</i><span>Analytics</span></button>
+    <button data-tab="ccode"><i>🧑‍💻</i><span>C Code</span></button>
+    <button data-tab="data"><i>💾</i><span>Data</span></button>
+  </nav>
+  <small class="foot">Data Structures Mini Project<br>Linked List + Stack</small>
+</aside>
+<main>
+  <header>
+    <h2 id="title">Dashboard</h2>
+    <input id="q" type="search" placeholder="🔍 Search routes or stops…">
+    <button id="theme" class="ico" title="Toggle dark / light">🌙</button>
+  </header>
+
+  <section id="dashboard" class="tab on">
+    <div class="cards">
+      <div class="card stat"><p>Total Routes</p><b id="s1">0</b></div>
+      <div class="card stat"><p>Total Stops</p><b id="s2">0</b></div>
+      <div class="card stat"><p>Average Fare</p><b id="s3">0</b></div>
+      <div class="card stat"><p>Highest Fare</p><b id="s4">0</b><small id="s4n"></small></div>
+    </div>
+    <div class="card"><h3>Average annual fare per route</h3><canvas id="c1"></canvas></div>
+  </section>
+
+  <section id="routes" class="tab">
+    <div class="bar">
+      <button class="pri" id="addRoute">➕ Add Route</button>
+      <select id="rf"></select>
+      <input id="mx" type="number" min="1" placeholder="Max fee ₹">
+    </div>
+    <div id="list"></div>
+  </section>
+
+  <section id="tools" class="tab">
+    <div class="grid">
+      <div class="card"><h3>💰 Update Annual Fee</h3>
+        <select id="uf_s"></select><input id="uf_v" type="number" min="1" placeholder="New fee ₹">
+        <button class="pri" id="ufb">Update Fee</button></div>
+      <div class="card"><h3>↩️ Undo Fee Update (Stack)</h3>
+        <button class="pri" id="undob">Undo Last Change (POP)</button>
+        <ol id="stk" class="stk"></ol></div>
+      <div class="card"><h3>➕ Insert Between Stops</h3>
+        <select id="ins_r"></select><select id="ins_a"></select>
+        <input id="ins_n" placeholder="New stop name"><input id="ins_f" type="number" min="1" placeholder="Annual fee ₹">
+        <button class="pri" id="insb">Insert After Selected</button></div>
+      <div class="card"><h3>🔄 Reverse Route (Evening Trip)</h3>
+        <select id="rev_r"></select><button class="pri" id="revb">Reverse Linked List</button>
+        <p id="revout" class="note"></p></div>
+      <div class="card wide"><h3>⚖️ Compare Two Stops</h3>
+        <div class="two"><select id="c_a"></select><select id="c_b"></select></div>
+        <button class="pri" id="cmpb">Compare</button><p id="cmpout" class="note"></p></div>
+    </div>
+  </section>
+
+  <section id="analytics" class="tab">
+    <div class="card"><h3>Fee of every stop</h3><canvas id="c2"></canvas></div>
+    <div class="grid">
+      <div class="card"><h3>Stops per route</h3><canvas id="c3" class="sq"></canvas><div id="leg" class="leg"></div></div>
+      <div class="card"><h3>Fee insights</h3><ul id="ins" class="insl"></ul></div>
+    </div>
+  </section>
+
+  <section id="data" class="tab">
+    <div class="grid">
+      <div class="card"><h3>⬇️ Export</h3><p class="note">Download all routes and stops.</p>
+        <button class="pri" id="expJ">Export JSON</button> <button class="pri" id="expC">Export CSV</button></div>
+      <div class="card"><h3>⬆️ Import</h3><p class="note">Load a .json or .csv file (replaces current data).</p>
+        <input id="imp" type="file" accept=".json,.csv"></div>
+      <div class="card"><h3>🎓 Sample Data</h3><p class="note">Load the College Bus Route project data.</p>
+        <button class="pri" id="sample">Load Sample Data</button> <button class="dan" id="reset">Clear All</button></div>
+    </div>
+    <p class="note">Your data is saved automatically in this browser (localStorage).</p>
+  </section>
+
+  <section id="ccode" class="tab"><div class="card"><h3>C Program (Linked List + Stack)</h3>
+    <p class="note">Compile: gcc bus_route_fare.c -o bus_route_fare -lm &nbsp; Run: ./bus_route_fare</p>
+    <button class="pri" id="cpy">📋 Copy C Code</button> <button class="pri" id="dlc">⬇️ Download .c file</button>
+    <pre class="code" id="csrc">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;ctype.h&gt;
+#include &lt;math.h&gt;
+
+#define FILE_NAME "routes.txt"
+#define LEN 100
+
+typedef struct StopNode {
+    char name[LEN];
+    double fee;
+    struct StopNode *next;
+} StopNode;
+
+typedef struct RouteNode {
+    char routeName[LEN];
+    StopNode *stopHead;
+    struct RouteNode *next;
+} RouteNode;
+
+typedef struct FeeLog {            /* stack node for Undo */
+    StopNode *stop;
+    double oldFee;
+    struct FeeLog *below;
+} FeeLog;
+
+RouteNode *head = NULL;
+FeeLog *top = NULL;
+
+/* ---------- helpers ---------- */
+int equalsIgnoreCase(const char *a, const char *b) {
+    while (*a &amp;&amp; *b) {
+        if (tolower((unsigned char)*a) != tolower((unsigned char)*b)) return 0;
+        a++; b++;
+    }
+    return *a == *b;
+}
+
+int startsWithIgnoreCase(const char *s, const char *prefix) {
+    while (*prefix) {
+        if (!*s || tolower((unsigned char)*s) != tolower((unsigned char)*prefix)) return 0;
+        s++; prefix++;
+    }
+    return 1;
+}
+
+void ask(const char *msg, char *buf) {
+    printf("%s", msg);
+    if (!fgets(buf, LEN, stdin)) { buf[0] = '\0'; return; }
+    buf[strcspn(buf, "\r\n")] = '\0';
+    /* trim leading spaces */
+    char *p = buf;
+    while (*p == ' ') p++;
+    if (p != buf) memmove(buf, p, strlen(p) + 1);
+    /* trim trailing spaces */
+    size_t n = strlen(buf);
+    while (n &gt; 0 &amp;&amp; buf[n - 1] == ' ') buf[--n] = '\0';
+}
+
+double askFee(const char *msg) {
+    char buf[LEN], *end;
+    ask(msg, buf);
+    double f = strtod(buf, &amp;end);
+    if (buf[0] != '\0' &amp;&amp; *end == '\0' &amp;&amp; f &gt; 0) return f;
+    printf("Invalid fee. Fee must be a number greater than 0.\n");
+    return -1;
+}
+
+RouteNode *findRoute(const char *name) {
+    for (RouteNode *r = head; r; r = r-&gt;next)
+        if (equalsIgnoreCase(r-&gt;routeName, name)) return r;
+    return NULL;
+}
+
+RouteNode *findRouteByNumber(const char *text) {   /* "1" -&gt; "Route 1 - ..." */
+    char prefix[LEN];
+    snprintf(prefix, LEN, "Route %s ", text);
+    for (RouteNode *r = head; r; r = r-&gt;next)
+        if (equalsIgnoreCase(r-&gt;routeName, text) || startsWithIgnoreCase(r-&gt;routeName, prefix))
+            return r;
+    return NULL;
+}
+
+StopNode *search(const char *key) {
+    for (RouteNode *r = head; r; r = r-&gt;next)
+        for (StopNode *t = r-&gt;stopHead; t; t = t-&gt;next)
+            if (equalsIgnoreCase(t-&gt;name, key)) return t;
+    return NULL;
+}
+
+RouteNode *routeOf(StopNode *s) {
+    for (RouteNode *r = head; r; r = r-&gt;next)
+        for (StopNode *t = r-&gt;stopHead; t; t = t-&gt;next)
+            if (t == s) return r;
+    return NULL;
+}
+
+/* ---------- operations ---------- */
+RouteNode *addRoute(const char *name) {
+    RouteNode *n = (RouteNode *)malloc(sizeof(RouteNode));
+    strncpy(n-&gt;routeName, name, LEN - 1);
+    n-&gt;routeName[LEN - 1] = '\0';
+    n-&gt;stopHead = NULL;
+    n-&gt;next = NULL;
+    if (head == NULL) { head = n; return n; }
+    RouteNode *t = head;
+    while (t-&gt;next) t = t-&gt;next;
+    t-&gt;next = n;
+    return n;
+}
+
+void addStop(RouteNode *r, const char *name, double fee) {
+    StopNode *n = (StopNode *)malloc(sizeof(StopNode));
+    strncpy(n-&gt;name, name, LEN - 1);
+    n-&gt;name[LEN - 1] = '\0';
+    n-&gt;fee = fee;
+    n-&gt;next = NULL;
+    if (r-&gt;stopHead == NULL) { r-&gt;stopHead = n; return; }
+    StopNode *t = r-&gt;stopHead;
+    while (t-&gt;next) t = t-&gt;next;
+    t-&gt;next = n;
+}
+
+void addRouteOrStop(void) {
+    char rn[LEN], sn[LEN];
+    ask("Route name (e.g. Route 4 - Thuraiyur): ", rn);
+    if (rn[0] == '\0') { printf("Route name cannot be empty.\n"); return; }
+    RouteNode *r = findRoute(rn);
+    if (r == NULL) { r = addRoute(rn); printf("New route added.\n"); }
+    ask("Stop name (blank to skip): ", sn);
+    if (sn[0] == '\0') return;
+    if (search(sn)) { printf("Stop already exists.\n"); return; }
+    double fee = askFee("Annual fee (Rs.): ");
+    if (fee &lt; 0) return;
+    addStop(r, sn, fee);
+    printf("Stop added.\n");
+}
+
+void display(void) {
+    if (head == NULL) { printf("No routes available.\n"); return; }
+    for (RouteNode *r = head; r; r = r-&gt;next) {
+        printf("\n%s\n", r-&gt;routeName);
+        if (r-&gt;stopHead == NULL) printf("   (no stops)\n");
+        for (StopNode *t = r-&gt;stopHead; t; t = t-&gt;next)
+            printf("   %-20s Rs. %.2f\n", t-&gt;name, t-&gt;fee);
+    }
+}
+
+void searchStop(void) {
+    char key[LEN];
+    ask("Enter stop name: ", key);
+    StopNode *t = search(key);
+    if (!t) { printf("No match found.\n"); return; }
+    printf("Route : %s\n", routeOf(t)-&gt;routeName);
+    printf("Fee   : Rs. %.2f\n", t-&gt;fee);
+}
+
+void updateFee(void) {
+    char key[LEN];
+    ask("Enter stop name: ", key);
+    StopNode *t = search(key);
+    if (!t) { printf("No match found.\n"); return; }
+    double fee = askFee("New fee (Rs.): ");
+    if (fee &lt; 0) return;
+    FeeLog *log = (FeeLog *)malloc(sizeof(FeeLog));   /* push old fee */
+    log-&gt;stop = t; log-&gt;oldFee = t-&gt;fee; log-&gt;below = top;
+    top = log;
+    t-&gt;fee = fee;
+    printf("Fee updated.\n");
+}
+
+void deleteStop(void) {
+    char key[LEN];
+    ask("Enter stop name to delete: ", key);
+    for (RouteNode *r = head; r; r = r-&gt;next) {
+        if (r-&gt;stopHead == NULL) continue;
+        if (equalsIgnoreCase(r-&gt;stopHead-&gt;name, key)) {
+            StopNode *del = r-&gt;stopHead;
+            r-&gt;stopHead = del-&gt;next;
+            free(del);
+            printf("Stop deleted.\n"); return;
+        }
+        StopNode *prev = r-&gt;stopHead, *cur = prev-&gt;next;
+        while (cur &amp;&amp; !equalsIgnoreCase(cur-&gt;name, key)) { prev = cur; cur = cur-&gt;next; }
+        if (cur) {
+            prev-&gt;next = cur-&gt;next;                  /* skip the deleted node */
+            free(cur);
+            printf("Stop deleted.\n"); return;
+        }
+    }
+    printf("No match found.\n");
+}
+
+void countStops(void) {
+    int c = 0;
+    for (RouteNode *r = head; r; r = r-&gt;next)
+        for (StopNode *t = r-&gt;stopHead; t; t = t-&gt;next) c++;
+    printf("Total stops: %d\n", c);
+}
+
+void highestFee(void) {
+    StopNode *best = NULL;
+    for (RouteNode *r = head; r; r = r-&gt;next)
+        for (StopNode *t = r-&gt;stopHead; t; t = t-&gt;next)
+            if (!best || t-&gt;fee &gt; best-&gt;fee) best = t;
+    if (!best) { printf("No stops available.\n"); return; }
+    printf("Highest fee: %s (%s) - Rs. %.2f\n", best-&gt;name, routeOf(best)-&gt;routeName, best-&gt;fee);
+}
+
+void reverseRoute(void) {
+    char key[LEN];
+    ask("Route number or name: ", key);
+    RouteNode *r = findRouteByNumber(key);
+    if (!r) { printf("Route not found.\n"); return; }
+    StopNode *prev = NULL, *cur = r-&gt;stopHead, *nxt;
+    while (cur) { nxt = cur-&gt;next; cur-&gt;next = prev; prev = cur; cur = nxt; }
+    r-&gt;stopHead = prev;
+    printf("Evening: ");
+    for (StopNode *t = r-&gt;stopHead; t; t = t-&gt;next)
+        printf("%s%s", t-&gt;name, t-&gt;next ? " -&gt; " : "");
+    printf("\n");
+}
+
+void undoFee(void) {
+    if (!top) { printf("Nothing to undo.\n"); return; }
+    top-&gt;stop-&gt;fee = top-&gt;oldFee;
+    printf("Fee restored: %s Rs. %.2f\n", top-&gt;stop-&gt;name, top-&gt;oldFee);
+    FeeLog *old = top;
+    top = top-&gt;below;                                 /* pop */
+    free(old);
+}
+
+void insertBetween(void) {
+    char after[LEN], name[LEN];
+    ask("Insert after which stop? ", after);
+    StopNode *t = search(after);
+    if (!t) { printf("Stop not found.\n"); return; }
+    ask("New stop name: ", name);
+    if (name[0] == '\0' || search(name)) { printf("Invalid or duplicate stop.\n"); return; }
+    double fee = askFee("Annual fee (Rs.): ");
+    if (fee &lt; 0) return;
+    StopNode *n = (StopNode *)malloc(sizeof(StopNode));
+    strncpy(n-&gt;name, name, LEN - 1); n-&gt;name[LEN - 1] = '\0';
+    n-&gt;fee = fee;
+    n-&gt;next = t-&gt;next;                                /* step 1 */
+    t-&gt;next = n;                                      /* step 2 */
+    printf("Stop inserted.\n");
+}
+
+void compareStops(void) {
+    char a[LEN], b[LEN];
+    ask("First stop: ", a);
+    ask("Second stop: ", b);
+    StopNode *x = search(a), *y = search(b);
+    if (!x || !y) { printf("One or both stops not found.\n"); return; }
+    printf("%s Rs. %.0f vs %s Rs. %.0f\n", x-&gt;name, x-&gt;fee, y-&gt;name, y-&gt;fee);
+    printf("Difference: Rs. %.2f\n", fabs(x-&gt;fee - y-&gt;fee));
+}
+
+/* ---------- file load / save ---------- */
+void seed(void) {
+    RouteNode *r = addRoute("Route 1 - Trichy Central");
+    addStop(r, "Central Bus Stand", 18000); addStop(r, "Thillai Nagar", 19500); addStop(r, "Woraiyur", 21000);
+    r = addRoute("Route 2 - Srirangam");
+    addStop(r, "Srirangam", 22000); addStop(r, "Thiruvanaikaval", 23000); addStop(r, "Kallanai Road", 24500);
+    r = addRoute("Route 3 - Lalgudi");
+    addStop(r, "Samayapuram", 25000); addStop(r, "Manachanallur", 27000); addStop(r, "Lalgudi", 29000);
+}
+
+void load(void) {
+    FILE *f = fopen(FILE_NAME, "r");
+    if (!f) { seed(); return; }
+    char line[300];
+    while (fgets(line, sizeof line, f)) {
+        line[strcspn(line, "\r\n")] = '\0';
+        if (line[0] == '\0') continue;
+        char *route = strtok(line, "|");
+        char *stop = strtok(NULL, "|");
+        char *fee = strtok(NULL, "|");
+        if (!route) continue;
+        RouteNode *r = findRoute(route);
+        if (!r) r = addRoute(route);
+        if (stop &amp;&amp; fee) addStop(r, stop, atof(fee));
+    }
+    fclose(f);
+}
+
+void save(void) {
+    FILE *f = fopen(FILE_NAME, "w");
+    if (!f) { printf("Could not save data file.\n"); return; }
+    for (RouteNode *r = head; r; r = r-&gt;next) {
+        if (!r-&gt;stopHead) fprintf(f, "%s\n", r-&gt;routeN
